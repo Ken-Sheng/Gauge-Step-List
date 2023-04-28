@@ -1,0 +1,38 @@
+<!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
+<idea-plugin>
+    <!-- Unique identifier of the plugin. It should be FQN. It cannot be changed between the plugin versions. -->
+    <id>org.ken.sheng.Gauge-Step-List</id>
+
+    <!-- Public plugin name should be written in Title Case.
+         Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-name -->
+    <name>Gauge-Step-List</name>
+
+    <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
+    <vendor email="2311543635@qq.com" url="https://www.yourcompany.com">Sheng</vendor>
+
+    <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
+         Simple HTML elements (text formatting, paragraphs, and lists) can be added inside of <![CDATA[ ]]> tag.
+         Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-description -->
+    <description><![CDATA[ This plugin is used to scan all gauge step for automation test ]]></description>
+
+    <!-- Product and plugin compatibility requirements.
+         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
+    <depends>com.intellij.modules.platform</depends>
+
+    <!-- Extension points defined by the plugin.
+         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
+    <extensions defaultExtensionNs="com.intellij">
+        <toolWindow id="GaugeStepList" anchor="right"
+                    factoryClass="org.ken.sheng.gaugesteplist.WindowFactory"
+                    order="last"
+                    doNotActivateOnStart="true" icon="AllIcons.Toolwindows.WebToolWindow"/>
+
+        <projectService serviceInterface="org.ken.sheng.gaugesteplist.ToolWindowService"
+                        serviceImplementation="org.ken.sheng.gaugesteplist.ToolWindowServiceImpl"/>
+    </extensions>
+    <actions>
+        <action id="step.scan" class="org.ken.sheng.gaugesteplist.GaugeStepScan" text="AllSteps">
+            <add-to-group group-id="GenerateGroup" anchor="last"/>
+        </action>
+    </actions>
+</idea-plugin>
