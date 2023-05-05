@@ -46,10 +46,10 @@ public class GaugeStepListPanel extends JBScrollPane implements TreeExpander {
                 return;
             }
             Object component = tree.getLastSelectedPathComponent();
-            if (!(component instanceof BaseNode<?>)) {
+            if (!(component instanceof StepNode<?>)) {
                 return;
             }
-            BaseNode<?> node = (BaseNode<?>) component;
+            StepNode<?> node = (StepNode<?>) component;
             if (getChooseListener() != null) {
                 getChooseListener().accept(node);
             }
@@ -60,7 +60,7 @@ public class GaugeStepListPanel extends JBScrollPane implements TreeExpander {
                 if (!tree.isEnabled()) {
                     return;
                 }
-                BaseNode<?> node = getNode(event);
+                StepNode<?> node = getNode(event);
                 if (node == null) {
                     return;
                 }
@@ -74,7 +74,7 @@ public class GaugeStepListPanel extends JBScrollPane implements TreeExpander {
             }
 
             @Nullable
-            private BaseNode<?> getNode(@NotNull MouseEvent event) {
+            private StepNode<?> getNode(@NotNull MouseEvent event) {
                 TreePath path = tree.getPathForLocation(event.getX(), event.getY());
                 tree.setSelectionPath(path);
                 return getChooseNode(path);
@@ -90,22 +90,22 @@ public class GaugeStepListPanel extends JBScrollPane implements TreeExpander {
         return (DefaultTreeModel) this.tree.getModel();
     }
 
-    public final void render(@NotNull BaseNode<?> rootNode) {
+    public final void render(@NotNull StepNode<?> rootNode) {
         getTreeModel().setRoot(rootNode);
     }
 
     @Nullable
-    public BaseNode<?> getChooseNode(@Nullable TreePath treePath) {
+    public StepNode<?> getChooseNode(@Nullable TreePath treePath) {
         Object component = null;
         if (treePath != null) {
             component = treePath.getLastPathComponent();
         } else {
             component = tree.getLastSelectedPathComponent();
         }
-        if (!(component instanceof BaseNode<?>)) {
+        if (!(component instanceof StepNode<?>)) {
             return null;
         }
-        return (BaseNode<?>) component;
+        return (StepNode<?>) component;
     }
 
     public void treeExpand() {
@@ -179,7 +179,7 @@ public class GaugeStepListPanel extends JBScrollPane implements TreeExpander {
     }
 
     @Nullable
-    protected JPopupMenu getPopupMenu(@NotNull MouseEvent event, @NotNull BaseNode<?> node) {
+    protected JPopupMenu getPopupMenu(@NotNull MouseEvent event, @NotNull StepNode<?> node) {
         List<JMenuItem> items = new ArrayList<>();
         if (node instanceof ClassNode) {
             // navigation
@@ -252,8 +252,8 @@ public class GaugeStepListPanel extends JBScrollPane implements TreeExpander {
     }
 
     @Nullable
-    protected abstract Consumer<BaseNode<?>> getChooseListener();
+    protected abstract Consumer<StepNode<?>> getChooseListener();
 
     @Nullable
-    protected abstract Consumer<BaseNode<?>> getDoubleClickListener();
+    protected abstract Consumer<StepNode<?>> getDoubleClickListener();
 }

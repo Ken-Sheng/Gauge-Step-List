@@ -12,6 +12,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.SimpleToolWindowPanel;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.psi.NavigatablePsiElement;
+import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiMethod;
 import com.intellij.ui.JBSplitter;
@@ -36,12 +37,12 @@ public class Window extends SimpleToolWindowPanel implements Disposable {
 
         this.project = project;
         this.taskExecutor = new ThreadPoolExecutor(
-                1,
-                1,
-                5L, TimeUnit.SECONDS,
-                new LinkedBlockingQueue<>(),
-                Executors.defaultThreadFactory(),
-                new ThreadPoolExecutor.DiscardOldestPolicy()
+            1,
+            1,
+            5L, TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(),
+            Executors.defaultThreadFactory(),
+            new ThreadPoolExecutor.DiscardOldestPolicy()
         );
         this.panel = new GaugeStepListPanel(project);
 
@@ -65,59 +66,53 @@ public class Window extends SimpleToolWindowPanel implements Disposable {
             public void run(@NotNull ProgressIndicator indicator) {
                 indicator.setIndeterminate(false);
 
-                Map<PsiMethod, BaseNode> serviceNodes = new HashMap<>();
-                Callable<BaseNode> producer = () -> {
+                Map<PsiMethod, StepNode<String>> serviceNodes = new HashMap<>();
+                Callable<RootNode> producer = () -> {
                     if (indicator.isCanceled()) {
                         return null;
                     }
-                    BaseNode root = new BaseNode("Find empty");
+                    RootNode root = new RootNode("Find empty");
                     indicator.setText("Initialize");
 
                     method.entrySet().stream()
                             .map(entry -> {
                                 String itemName = entry.getKey();
-                                List<GaugeStep> requests = entry.getValue();
-                                if (requests == null || requests.isEmpty()) {
+                                List<PsiMethod> steps = entry.getValue();
+                                if (steps == null || steps.isEmpty()) {
                                     return null;
                                 }
-                                ModuleNode moduleNode = new ModuleNode(new ModuleTree(itemName));
-                                Boolean showClass = Settings.SystemOptionForm.SHOW_CLASS_SERVICE_TREE.getData();
-                                if (showClass != null && showClass) {
-                                    Map<PsiClass, List<GaugeStep>> listMap = requests.stream().collect(
-                                            Collectors.toMap(
-                                                    // key: PsiClass
-                                                    gaugeStep -> {
-                                                        NavigatablePsiElement psiElement = gaugeStep.getPsiElement();
-                                                        PsiElement parent = psiElement.getParent();
-                                                        if (parent instanceof PsiClass) {
-                                                            return ((PsiClass) parent);
-                                                        }
-                                                        return null;
-                                                    },
-                                                    // value: List<ApiService>
-                                                    gaugeStep -> new ArrayList<>(Collections.singletonList(gaugeStep)),
-                                                    // key冲突时的操作
-                                                    (list1, list2) -> {
-                                                        list1.addAll(list2);
-                                                        return list1;
+                                ModuleNode<String> moduleNode = new ModuleNode<>(itemName);
+                                Map<PsiClass, List<GaugeStep>> listMap = steps.stream().collect(
+                                        Collectors.toMap(
+                                                // key: PsiClass
+                                                gaugeStep -> {
+                                                    NavigatablePsiElement psiElement = gaugeStep.getPsiElement();
+                                                    PsiElement parent = psiElement.getParent();
+                                                    if (parent instanceof PsiClass) {
+                                                        return ((PsiClass) parent);
                                                     }
-                                            )
-                                    );
-                                    List<BaseNode<?>> children = ModuleNode.Util.getChildren(serviceNodes, listMap, showClass);
-                                    children.forEach(moduleNode::add);
-                                } else {
-                                    List<BaseNode<?>> children = ModuleNode.Util.getChildren(serviceNodes, requests);
-                                    children.forEach(moduleNode::add);
-                                }
+                                                    return null;
+                                                },
+                                                // value: List<ApiService>
+                                                gaugeStep -> new ArrayList<>(Collections.singletonList(gaugeStep)),
+                                                // key冲突时的操作
+                                                (list1, list2) -> {
+                                                    list1.addAll(list2);
+                                                    return list1;
+                                                }
+                                        )
+                                );
+                                List<StepNode<?>> children = ModuleNode.Util.getChildren(serviceNodes, listMap, showClass);
+                                children.forEach(moduleNode::add);
                                 return moduleNode;
                             })
                             .filter(Objects::nonNull)
-                            .sorted(Comparator.comparing(moduleNode -> moduleNode.getSource().getModuleName()))
+                            .sorted(Comparator.comparing(ModuleNode::getFragment))
                             .forEach(root::add);
                     indicator.setText("Waiting to re-render");
                     return root;
                 };
-                Consumer<TreeNode> consumer = root -> {
+                Consumer<RootNode> consumer = root -> {
                     if (root == null) {
                         return;
                     }

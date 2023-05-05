@@ -15,14 +15,13 @@ public class CustomTreeCellRenderer extends ColoredTreeCellRenderer {
             boolean expanded,
             boolean leaf,
             int row, boolean hasFocus) {
-        BaseNode<?> node = null;
-        if (target instanceof BaseNode) {
-            node = (BaseNode<?>) target;
+        StepNode<?> node = null;
+        if (target instanceof StepNode) {
+            node = (StepNode<?>) target;
         }
         if (node == null) {
             return;
         }
-        setIcon(node.getIcon(selected));
         append(node.getFragment(), node.getTextAttributes());
     }
 }
